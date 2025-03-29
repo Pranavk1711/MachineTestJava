@@ -3,6 +3,7 @@ package com.example.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.example.model.Product;
@@ -17,6 +18,18 @@ public class ProductService {
     }
 
     public Page<Product> getAllProducts(Pageable pageable) {
+        // Verify the sort property exists
+        if (pageable.getSort().isSorted()) {
+            Sort.Order order = pageable.getSort().get().findFirst().orElse(null);
+            if (order != null) {
+                String property = order.getProperty();
+                try {
+                    Product.class.getDeclaredField(property);
+                } catch (NoSuchFieldException e) {
+                    throw new IllegalArgumentException("Invalid sort property: " + property);
+                }
+            }
+        }
         return repository.findAll(pageable);
     }
 
